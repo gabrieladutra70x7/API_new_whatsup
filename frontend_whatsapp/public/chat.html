@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Whats Up - Chat</title>
+  
+  <!-- Relaciona o ficheiro HTML com o style.css externo -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- ESQUERDA: LISTA DE CONVERSAS -->
+    <aside class="sidebar">
+      <header class="sidebar-header">
+        <div class="brand-container">
+          <!-- Logo do Whats Up carregada via logo.png -->
+          <img src="logo.png" alt="Whats Up Logo" class="logo" onerror="this.src='https://via.placeholder.com/38/075e54/ffffff?text=WU'">
+          <h1>Whats Up</h1>
+        </div>
+      </header>
+
+      <div class="search-box">
+        <input type="text" placeholder="Pesquisar conversa">
+      </div>
+
+      <div class="chat-list">
+        <div class="chat-item active">
+          <div class="avatar">G</div>
+          <div class="chat-info">
+            <div class="chat-info-header">
+              <span class="contact-name">Grupo DEV SENAI</span>
+              <span class="chat-time">17:05</span>
+            </div>
+            <p class="last-message">Envie uma mensagem abaixo...</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- DIREITA: CONVERSA ATIVA -->
+    <main class="chat-area">
+      <header class="chat-header">
+        <div class="avatar">G</div>
+        <div class="active-contact">
+          <span class="name">Grupo DEV SENAI</span>
+          <span class="status">online</span>
+        </div>
+      </header>
+
+      <!-- EXIBIÇÃO DE MENSAGENS -->
+      <div class="messages-container" id="messages-container">
+        <div class="message-bubble received">
+          <p>Seja bem-vindo ao chat do Whats Up!</p>
+          <div class="message-time">17:00</div>
+        </div>
+      </div>
+
+      <!-- FORMULÁRIO DE ENVIO (POST /chat em JSON) -->
+      <form class="chat-footer" id="form-chat">
+        <input type="text" id="mensagem-input" placeholder="Digite uma mensagem" autocomplete="off" required>
+        <button type="submit" class="btn-send" id="btn-enviar">Enviar</button>
+      </form>
+      <div id="status-mensagem"></div>
+    </main>
+  </div>
+
+  <script>
+    // Seleção com document.querySelector()
+    const formChat = document.querySelector('#form-chat');
+    const inputMensagem = document.querySelector('#mensagem-input');
+    const containerMensagens = document.querySelector('#messages-container');
+    const statusMensagem = document.querySelector('#status-mensagem');
+
+    function obterHoraAtual() {
+      const agora = new Date();
+      return `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
+    }
+
+    function adicionarMensagemTela(texto, tipo = 'sent') {
+      const bolha = document.createElement('div');
+      bolha.classList.add('message-bubble', tipo);
+
+      const paragrafo = document.createElement('p');
+      paragrafo.textContent = texto;
+
+      const tempo = document.createElement('div');
+      tempo.classList.add('message-time');
+      tempo.textContent = obterHoraAtual();
+
+      bolha.appendChild(paragrafo);
+      bolha.appendChild(tempo);
+      containerMensagens.appendChild(bolha);
+
+      containerMensagens.scrollTop = containerMensagens.scrollHeight;
+    }
+
+    // Missão 2: Envio de mensagem consumindo POST /chat em JSON
+    formChat.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const mensagemTexto = inputMensagem.value.trim();
+      if (!mensagemTexto) return;
+
+      const dados = {
+        mensagem: mensagemTexto
+      };
+
+      adicionarMensagemTela(mensagemTexto, 'sent');
+      inputMensagem.value = '';
+
+      try {
+        const resposta = await fetch('http://localhost:3000/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(dados)
+        });
+
+        const resultado = await resposta.json();
+
+        if (resposta.ok) {
+          statusMensagem.textContent = 'Enviada!';
+          statusMensagem.style.color = 'green';
+        } else {
+          statusMensagem.textContent = resultado.erro || 'Erro no envio.';
+          statusMensagem.style.color = 'red';
+        }
+      } catch (erro) {
+        console.error('Erro na requisição:', erro);
+        statusMensagem.textContent = 'Erro de conexão com o servidor (localhost:3000).';
+        statusMensagem.style.color = 'red';
+      }
+    });
+  </script>
+</body>
+</html>
