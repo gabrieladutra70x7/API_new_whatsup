@@ -1,41 +1,43 @@
 
-const form = document.querySelector('#form-registro');
-const inputNome = document.querySelector('#nome');
-const inputTelefone = document.querySelector('#telefone');
-const inputSenha = document.querySelector('#senha');
-const divMensagem = document.querySelector('#mensagem');
+const API_URL = 'http://localhost:3000/api/auth';
 
-form.addEventListener('submit', async (event) => {
-  event.preventDefault();
+const loginForm = document.getElementById('login-form');
+const emailInput = document.getElementById('email');
+const senhaInput = document.getElementById('senha');
+const statusMessage = document.getElementById('status-message');
 
-  const dados = {
-    nome: inputNome.value.trim(),
-    telefone: inputTelefone.value.trim(),
-    senha: inputSenha.value.trim()
-  };
+if (loginForm) {
+    loginForm.addEventListener('submit', async (event) => {
+        event.preventDefault(); // Impede o recarregamento da página
 
-  try {
-   const resposta = await fetch('http://localhost:3000/auth', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(dados)
+        const payload = {
+            email: emailInput.value,
+            senha: senhaInput.value
+        };
+
+        try {
+            const response = await fetch(`${API_URL}/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                statusMessage.textContent = data.mensagem || 'Erro ao autenticar.';
+                return;
+            }
+
+            // Armazena usuário autenticado para manter a sessão local
+            localStorage.setItem('usuario_logado', JSON.stringify(data.usuario));
+            statusMessage.textContent = 'Sucesso! Redirecionando...';
+
+        } catch (error) {
+            console.error('Erro na conexão:', error);
+            statusMessage.textContent = 'Servidor indisponível no momento.';
+        }
     });
-
-    const resultado = await resposta.json();
-
-    if (resposta.ok) {
-      divMensagem.textContent = resultado.mensagem;
-      divMensagem.style.color = 'green';
-      form.reset();
-    } else {
-      divMensagem.textContent = resultado.erro;
-      divMensagem.style.color = 'red';
-    }
-  } catch (erro) {
-    console.error('Erro na requisição:', erro);
-    divMensagem.textContent = 'Erro de conexão com o servidor.';
-    divMensagem.style.color = 'red';
-  }
-});
+}

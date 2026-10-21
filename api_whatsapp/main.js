@@ -1,23 +1,17 @@
-//libs necessárias
 const express = require('express');
 const cors = require('cors');
-const authRoute = require('./routes/auth.route.js');
+const authRoutes = require('./routes/auth.route');
 
-//executamos as funções
 const app = express();
 
-app.use(cors({
-    origin: '*', // Permite que qualquer origem acesse localmente para testes
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// Habilita comunicação cross-origin e leitura de JSON no body
+app.use(cors());
+app.use(express.json());
 
-app.use(express.json()); // Permite ler dados em JSON enviados pelo frontend
-app.use(express.static('public')); // Serve os ficheiros estáticos (index.html, style.css, etc.)
-app.use(authRoute); // Associa as rotas de autenticação/registro
+// Registro de rotas de autenticação
+app.use('/api/auth', authRoutes);
 
-const PORT = 3000;
-const SERVER = "localhost";
-const msg = `Servidor Online em http://${SERVER}:${PORT}`;
-app.listen(PORT, () => console.log(msg));
-
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+});
